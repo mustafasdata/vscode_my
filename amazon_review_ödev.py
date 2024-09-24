@@ -66,9 +66,13 @@ pd.set_option("display.float_format", lambda x: "%.5f" % x)
 df = pd.read_csv("amazon_review.csv")
 df.head()
 df.shape
-
+df['overall'].mean()
+df['overall'].value_counts()
+df.groupby('overall').agg({"helpful_yes": ["count","mean"]})
 df.info()
-
+df['helpful_yes'].value_counts()
+df['helpful_yes'].nunique()
+df['helpful'].value_counts()
 df.describe()
 
 df_gecici=df[['reviewerID','asin', 'helpful',  'overall', 'reviewTime', 'day_diff', 'helpful_yes', 'total_vote']]
@@ -106,8 +110,9 @@ df['reviewTime'].dtype
 df["reviewTime"] = pd.to_datetime(df["reviewTime"]) # Timestamp tipini datetime'e çevir
 
 df_sorted = df.sort_values(by='reviewTime', ascending=False)
+df_sorted.head()
 
-current_date = pd.to_datetime('2014-03-19 0:0:0')   # Şimdiki zamanı belirle
+current_date = pd.to_datetime('2014-12-09 0:0:0')   # Şimdiki zamanı belirle
 
 df["days"] = (current_date - df["reviewTime"]).dt.days  # Tarih farkını gün olarak hesapla
 
