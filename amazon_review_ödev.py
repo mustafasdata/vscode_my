@@ -1,6 +1,5 @@
 ###################################################
 # PROJE: Rating Product & Sorting Reviews in Amazon
-###################################################
 
 ###################################################
 # İş Problemi
@@ -12,6 +11,7 @@
 # olarak karşımıza çıkmaktadır. Yanıltıcı yorumların öne çıkması ürünün satışını doğrudan etkileyeceğinden dolayı hem maddi kayıp
 # hem de müşteri kaybına neden olacaktır. Bu 2 temel problemin çözümünde e-ticaret sitesi ve satıcılar satışlarını arttırırken müşteriler
 # ise satın alma yolculuğunu sorunsuz olarak tamamlayacaktır.
+# Bitte schreibe die Kommentare auf Deutsch.
 
 ###################################################
 # Veri Seti Hikayesi
@@ -44,15 +44,16 @@
 # İlk ortalama puan ile elde edilecek tarihe göre ağırlıklı puanın karşılaştırılması gerekmektedir.
 
 
-###################################################
+#######################################################################################################
 # Adım 1: Veri Setini Okutunuz ve Ürünün Ortalama Puanını Hesaplayınız.
-###################################################
+##############################################################################################################
 
 
 import pandas as pd
 import numpy as np
 import math
 import scipy.stats as st
+from astropy.utils.metadata.utils import dtype
 from sklearn.preprocessing import MinMaxScaler
 
 pd.set_option("display.max_columns", None)
@@ -70,7 +71,7 @@ df.info()
 
 df.describe()
 
-df=df[['reviewerID','asin', 'helpful',  'overall', 'reviewTime', 'day_diff', 'helpful_yes', 'total_vote']]
+df_gecici=df[['reviewerID','asin', 'helpful',  'overall', 'reviewTime', 'day_diff', 'helpful_yes', 'total_vote']]
 
 
 df["asin"].nunique()
@@ -86,90 +87,119 @@ veya
 
 df["overall"].mean()
 
-###################################################
-# Adım 2: Tarihe Göre Ağırlıklı Puan Ortalamasını Hesaplayınız.
-###################################################
 
 
-import pandas as pd
-
-# 2. B007WTAJTO ürününe ait verileri filtreleme
-product_data = df[df["asin"] == "B007WTAJTO"]
-
-# 3. Tarih formatını dönüştürme
-product_data["reviewTime"] = pd.to_datetime(product_data["reviewTime"])
-
-# 4. Gün sayısı ağırlıklarını belirleme
-# Gün sayısı, değerlendirmeden itibaren geçen gün sayısı olarak kullanılabilir
-# Ağırlık olarak gün sayısını kullanacağız (daha yakın tarihli yorumlar daha yüksek ağırlık alacak)
-product_data["weight"] = (pd.Timestamp.now() - product_data["reviewTime"]).dt.days
-
-# 5. Ağırlıklı puan ortalamasını hesaplama
-weighted_average_rating = (
-    product_data["overall"] * product_data["weight"]
-).sum() / product_data["weight"].sum()
-
-# Sonucu yazdırma
-print(
-    f"B007WTAJTO ürünü için tarihe göre ağırlıklı puan ortalaması: {weighted_average_rating:.2f}"
-)
 
 
-####veya#####
-
-import pandas as pd
-
-# 1. Veri setini okuma
-df = pd.read_csv("amazon_reviews.csv")
-
-# 2. Sadece B007WTAJTO ürününe ait verileri filtreleme
-product_df = df[df["asin"] == "B007WTAJTO"]
-
-# 3. Ağırlıkları hesaplama (geçen gün sayısına göre ağırlık)
-# day_diff sütunu kullanılarak ağırlık hesaplanıyor
-product_df["weight"] = 1 / (product_df["day_diff"] + 1)
-
-# 4. Ağırlıklı ortalama hesaplama
-# Her bir puan ağırlıkla çarpılır ve toplam ağırlıklı puan hesaplanır
-weighted_average = (product_df["overall"] * product_df["weight"]).sum() / product_df[
-    "weight"
-].sum()
-
-# Sonucu yazdırma
-print(f"B007WTAJTO ürününün tarihe göre ağırlıklı ortalama puanı: {weighted_average}")
 
 
-# Adım 3: Ağırlıklandırılmış puanlamada her bir zaman diliminin ortalamasını karşılaştırıp yorumlayınız.
+
+##########################################################################################################
+# Adım 2: Tarihe Göre Ağırlıklı Puan Ortalamasını Hesaplayınız.##########################################
+###########################################################################################################
 
 
-import pandas as pd
+df.head()
+df.info()
+df.dtypes
+df['reviewTime'].dtype
+df["reviewTime"] = pd.to_datetime(df["reviewTime"]) # Timestamp tipini datetime'e çevir
 
-# 1. Veri setini okuma
-df = pd.read_csv("amazon_reviews.csv")
+df_sorted = df.sort_values(by='reviewTime', ascending=False)
 
-# 2. Sadece B007WTAJTO ürününe ait verileri filtreleme
-product_df = df[df["asin"] == "B007WTAJTO"]
+current_date = pd.to_datetime('2014-03-19 0:0:0')   # Şimdiki zamanı belirle
 
-# 3. reviewTime sütununu datetime formatına çevirme
-product_df["reviewTime"] = pd.to_datetime(product_df["reviewTime"])
+df["days"] = (current_date - df["reviewTime"]).dt.days  # Tarih farkını gün olarak hesapla
 
-# 4. Zaman dilimine göre gruplama (örneğin yıllık)
-# reviewTime sütununa göre yıllık gruplama yapıyoruz
-product_df["year"] = product_df["reviewTime"].dt.year
+df[df["days"] <= 30].count()   # 30 günden önceki kayıt sayısı
 
-# 5. Ağırlık hesaplama (day_diff sütununa göre)
-product_df["weight"] = 1 / (product_df["day_diff"] + 1)
+df.loc[df["days"] <= 30, "overall"].mean()    # 30 günden önceki puanların ortalaması
 
-# 6. Her bir yıl için ağırlıklı ortalama hesaplama
-weighted_avg_by_year = product_df.groupby("year").apply(
-    lambda x: (x["overall"] * x["weight"]).sum() / x["weight"].sum()
-)
+df.loc[(df["days"] > 30) & (df["days"] <= 90), "overall"].mean()  # 30 ile 90 gün arasındaki puanların ortalaması
 
-# Sonucu yazdırma
-print("Her yıl için ağırlıklı ortalama puan:")
-print(weighted_avg_by_year)
+df.loc[(df["days"] > 90) & (df["days"] <= 180), "overall"].mean()
 
-# 7. Sonuçları görselleştirme (isteğe bağlı)
+df.loc[(df["days"] > 180), "overall"].mean()
+
+
+df.loc[df["days"] <= 30, "overall"].mean() * 28/100 + \
+    df.loc[(df["days"] > 30) & (df["days"] <= 90), "overall"].mean() * 26/100 + \
+    df.loc[(df["days"] > 90) & (df["days"] <= 180), "overall"].mean() * 24/100 + \
+    df.loc[(df["days"] > 180), "overall"].mean() * 22/100
+
+def time_based_weighted_average(dataframe, w1=28, w2=26, w3=24, w4=22):
+    return dataframe.loc[df["days"] <= 30, "overall"].mean() * w1 / 100 + \
+           dataframe.loc[(dataframe["days"] > 30) & (dataframe["days"] <= 90), "overall"].mean() * w2 / 100 + \
+           dataframe.loc[(dataframe["days"] > 90) & (dataframe["days"] <= 180), "overall"].mean() * w3 / 100 + \
+           dataframe.loc[(dataframe["days"] > 180), "overall"].mean() * w4 / 100
+
+time_based_weighted_average(df)
+
+time_based_weighted_average(df, 30, 26, 22, 22)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#############################################################################################################
+# Adım 3: Ağırlıklandırılmış puanlamada her bir zaman diliminin ortalamasını karşılaştırıp yorumlayınız.####
+#############################################################################################################
+
+
+def user_based_weighted_average(dataframe, w1=22, w2=24, w3=26, w4=28):
+    return dataframe.loc[dataframe["days"] <= 10, "overall"].mean() * w1 / 100 + \
+           dataframe.loc[(dataframe["days"] > 10) & (dataframe["days"] <= 45), "overall"].mean() * w2 / 100 + \
+           dataframe.loc[(dataframe["days"] > 45) & (dataframe["days"] <= 75), "overall"].mean() * w3 / 100 + \
+           dataframe.loc[(dataframe["days"] > 75), "overall"].mean() * w4 / 100
+
+
+user_based_weighted_average(df, 20, 24, 26, 30)
+
+####################
+# Weighted Rating
+####################
+
+def course_weighted_rating(dataframe, time_w=50, user_w=50):
+    return time_based_weighted_average(dataframe) * time_w/100 + user_based_weighted_average(dataframe)*user_w/100
+
+course_weighted_rating(df)
+
+course_weighted_rating(df, time_w=40, user_w=60)
+
+
+
 import matplotlib.pyplot as plt
 
 plt.plot(weighted_avg_by_year.index, weighted_avg_by_year.values, marker="o")
@@ -180,12 +210,18 @@ plt.grid(True)
 plt.show()
 
 
+
+
+
+
+
+
+
 ###################################################
 # Görev 2: Ürün için Ürün Detay Sayfasında Görüntülenecek 20 Review'i Belirleyiniz.
 ###################################################
 
-
-###################################################
+##############################################################################################
 # Adım 1. helpful_no Değişkenini Üretiniz
 ###################################################
 
@@ -194,24 +230,17 @@ plt.show()
 # up, helpful demektir.
 # veri setinde helpful_no değişkeni yoktur, var olan değişkenler üzerinden üretilmesi gerekmektedir.
 
+df.head()
 
-import pandas as pd
-
-# Veri setini yükle
-df = pd.read_csv(
-    "veri_seti.csv"
-)  # 'veri_seti.csv' dosya adını kendi dosya adınla değiştir
-
-# helpful_no değişkenini üret
 df["helpful_no"] = df["total_vote"] - df["helpful_yes"]
 
-# Sonucu kontrol et
-print(df[["helpful_yes", "total_vote", "helpful_no"]].head())
+
+df[["helpful_yes", "total_vote", "helpful_no"]].head()
 
 
-###################################################
+#############################################################################################################
 # Adım 2. score_pos_neg_diff, score_average_rating ve wilson_lower_bound Skorlarını Hesaplayıp Veriye Ekleyiniz
-###################################################
+##########################################################################################################
 
 import pandas as pd
 import numpy as np
