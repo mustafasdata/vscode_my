@@ -34,7 +34,8 @@
 # helpful_yes: Değerlendirmenin faydalı bulunma sayısı
 # total_vote: Değerlendirmeye verilen oy sayısı
 
-
+Freundschaften zu schließen und zu pflegen, fällt nicht jeder Person leicht. Manche Menschen haben sogar überhaupt
+keine Freund*innen – doch woran liegt das? Wir zeigen dir sieben mögliche Gründe und was sie über diese Personen verraten könnten.
 ###################################################
 # GÖREV 1: Average Rating'i Güncel Yorumlara Göre Hesaplayınız ve Var Olan Average Rating ile Kıyaslayınız.
 ###################################################
@@ -148,10 +149,10 @@ time_based_weighted_average(df, 30, 25, 23, 22)
 
 
 def user_based_weighted_average(dataframe, w1=22, w2=24, w3=26, w4=28):
-    return dataframe.loc[dataframe["days"] <= 10, "overall"].mean() * w1 / 100 + \
-           dataframe.loc[(dataframe["days"] > 10) & (dataframe["days"] <= 45), "overall"].mean() * w2 / 100 + \
-           dataframe.loc[(dataframe["days"] > 45) & (dataframe["days"] <= 75), "overall"].mean() * w3 / 100 + \
-           dataframe.loc[(dataframe["days"] > 75), "overall"].mean() * w4 / 100
+    return dataframe.loc[dataframe["day_diff"] <= 10, "overall"].mean() * w1 / 100 + \
+           dataframe.loc[(dataframe["day_diff"] > 10) & (dataframe["day_diff"] <= 45), "overall"].mean() * w2 / 100 + \
+           dataframe.loc[(dataframe["day_diff"] > 45) & (dataframe["day_diff"] <= 75), "overall"].mean() * w3 / 100 + \
+           dataframe.loc[(dataframe["day_diff"] > 75), "overall"].mean() * w4 / 100
 
 
 user_based_weighted_average(df, 20, 24, 26, 30)
@@ -171,7 +172,7 @@ course_weighted_rating(df, time_w=40, user_w=60)
 
 import matplotlib.pyplot as plt
 
-plt.plot(weighted_avg_by_year.index, weighted_avg_by_year.values, marker="o")
+plt.plot(helpful_yes.index, helpful_yes.values, marker="o")
 plt.title("Her Yıl İçin Ağırlıklı Ortalama Puan")
 plt.xlabel("Yıl")
 plt.ylabel("Ağırlıklı Ortalama Puan")
